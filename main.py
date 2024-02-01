@@ -1,11 +1,11 @@
 import os
-path = (os.path.dirname(os.path.abspath(__file__)))
 import argparse
 import configparser
 from libs import UDPOut
 from libs import Drive
 import threading
 from time import sleep
+path = (os.path.dirname(os.path.abspath(__file__)))
 
 mbedIP='10.0.0.101'
 mbedPort=1001
@@ -45,7 +45,7 @@ def drive(rover):
                 lineNum += 1
                 try:
                     coords = [float(item.replace('\ufeff',"")) for item in line.strip().split()]
-                except:
+                except ValueError:
                     print("Parse Error on line " + str(lineNum) + ": Please enter <lat long>")
                     break
                 else:
@@ -66,6 +66,11 @@ def drive(rover):
     lights = threading.Thread(target=flash)
     lights.start()
     #UDPOut.sendLED(mbedIP, mbedPort, 'g')
+
+
+    f = open("Recorded_Coordinates_"+ args.latLong + ".txt", "a")
+    f.write("Latitude: " + rover.gps.latitude + "\n  Longitude: " + rover.gps.longitude)
+    f.close()
 
 if __name__ == "__main__":
     os.chdir(path)
