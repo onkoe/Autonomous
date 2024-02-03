@@ -1,8 +1,23 @@
 name: CI
+
 on: [push, pull_request]
+
 jobs:
-  ruff:
+  ci:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
-      - uses: chartboost/ruff-action@v1
+
+      - name: Install Rye
+        uses: eifinger/setup-rye@v1
+        with:
+          enable-cache: true
+
+      - name: Run Ruff formatter/linter
+        uses: chartboost/ruff-action@v1
+
+      - name: Check types with MyPy
+        uses: sasanquaneuf/mypy-github-action@releases/v1
+        with:
+          checkName: "ci"
