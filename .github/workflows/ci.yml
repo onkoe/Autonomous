@@ -15,7 +15,7 @@ jobs:
           enable-cache: true
 
       - name: Run Ruff formatter/linter
-        uses: chartboost/ruff-action@v1
+        run: rye lint && rye format
 
       - name: Check types with MyPy
         uses: sasanquaneuf/mypy-github-action@releases/v1
