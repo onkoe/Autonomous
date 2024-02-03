@@ -1,11 +1,9 @@
 [project]
 name = "autonomous"
-version = "0.1.0"
-description = "Add a short description here"
-dependencies = [
-    "opencv-contrib-python==4.6.0.66",
-    "flask>=2.3.2",
-]
+version = "1.1"
+description = "The autonomous libraries"
+authors = [{ name = "Reza", email = "soonerrover@ou.edu" }]
+dependencies = ["opencv-contrib-python==4.6.0.66", "flask>=2.3.2"]
 readme = "README.md"
 requires-python = ">= 3.10"
 
@@ -15,9 +13,11 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
+dev-dependencies = ["mypy>=1.8.0"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
-
-[tool.rye.workspace]
 members = ["examples", "gps", "libs", "yolo", "RoverMap"]
+[tool.hatch.build.targets.wheel]
+
+packages = ["dummy"]
