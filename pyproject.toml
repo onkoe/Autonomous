@@ -21,6 +21,6 @@ dev-dependencies = [
 [tool.hatch.metadata]
 allow-direct-references = true
 members = ["examples", "gps", "libs", "yolo", "RoverMap"]
-[tool.hatch.build.targets.wheel]
 
+[tool.hatch.build.targets.wheel]
 packages = ["dummy"]
