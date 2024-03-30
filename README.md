@@ -1,6 +1,6 @@
 # Autonomous Code
 
-This folder contains all of the code needed for the autonomous program to run. We tied for 2nd in the 2022 autonomous course with this code when one of our wheels wasn't moving!
+This folder contains all of the code needed for the Autonomous program to run. We tied for 2nd in the 2022 autonomous course with this code when one of our wheels wasn't moving!
 
 ## Dependencies
 
