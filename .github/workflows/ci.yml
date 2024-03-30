@@ -22,6 +22,9 @@ jobs:
                   key: "${{ matrix.rye_version }}-${{ matrix.use_uv }}"
                   path: "${{ matrix.rye_home }}"
 
+            - name: Add Rye to PATH
+              run: echo "${{ matrix.rye_home }}/shims" >> $GITHUB_PATH && echo "${{ matrix.rye_home }}/tools" >> $GITHUB_PATH
+
             - name: Install Rye
               uses: phi-friday/install-rye@v1.2
               if: steps.get-cache.outputs.cache-hit != 'true'
@@ -31,6 +34,13 @@ jobs:
                   rye_home: "${{ matrix.rye_home }}"
                   use_uv: "${{ matrix.use_uv }}"
 
+            - name: Cache virtual environment
+              uses: actions/cache@v4
+              id: venv-cache
+              with:
+                  key: venv-${{ runner.os }}-${{ hashFiles('requirements.lock') }}
+                  path: ".venv"
+
             - name: Get dependencies
               run: rye sync
 
@@ -38,7 +48,7 @@ jobs:
               run: . .venv/bin/activate
 
             - name: Run Ruff formatter/linter
-              run: ls -a && ./.venv/bin/ruff check && ./.venv/bin/ruff format --check
+              run: ./.venv/bin/ruff check && ./.venv/bin/ruff format --check
 
             - name: Check types with MyPy
               uses: sasanquaneuf/mypy-github-action@releases/v1
