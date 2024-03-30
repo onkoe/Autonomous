@@ -3,21 +3,44 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  ci:
-    runs-on: ubuntu-latest
+    ci:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                include:
+                    - rye_version: "0.32.0"
+                      rye_home: "/opt/rye"
+                      use_uv: "true"
 
-    steps:
-      - uses: actions/checkout@v3
+        steps:
+            - uses: actions/checkout@v3
 
-      - name: Install Rye
-        uses: eifinger/setup-rye@v1
-        with:
-          enable-cache: true
+            - name: Check cache for Rye
+              uses: actions/cache@v4
+              id: get-cache
+              with:
+                  key: "${{ matrix.rye_version }}-${{ matrix.use_uv }}"
+                  path: "${{ matrix.rye_home }}"
 
-      - name: Run Ruff formatter/linter
-        run: rye lint && rye format
+            - name: Install Rye
+              uses: phi-friday/install-rye@v1.2
+              if: steps.get-cache.outputs.cache-hit != 'true'
+              id: install-rye
+              with:
+                  rye_version: "${{ matrix.rye_version }}"
+                  rye_home: "${{ matrix.rye_home }}"
+                  use_uv: "${{ matrix.use_uv }}"
 
-      - name: Check types with MyPy
-        uses: sasanquaneuf/mypy-github-action@releases/v1
-        with:
-          checkName: "ci"
+            - name: Get dependencies
+              run: rye sync
+
+            - name: Enter virtual env
+              run: . .venv/bin/activate
+
+            - name: Run Ruff formatter/linter
+              run: ls -a && ./.venv/bin/ruff check && ./.venv/bin/ruff format --check
+
+            - name: Check types with MyPy
+              uses: sasanquaneuf/mypy-github-action@releases/v1
+              with:
+                  checkName: "ci"

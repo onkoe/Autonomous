@@ -3,7 +3,7 @@ name = "autonomous"
 version = "1.1"
 description = "The autonomous libraries"
 authors = [{ name = "Reza", email = "soonerrover@ou.edu" }]
-dependencies = ["opencv-contrib-python==4.6.0.66", "flask>=2.3.2"]
+dependencies = ["opencv-python>=4.7", "flask>=2.3.2"]
 readme = "README.md"
 requires-python = ">= 3.10"
 
@@ -13,10 +13,7 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = [
-    "mypy>=1.8.0",
-    "ruff>=0.2.0",
-]
+dev-dependencies = ["mypy>=1.8.0", "ruff>=0.2.0"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
