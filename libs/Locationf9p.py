@@ -1,11 +1,13 @@
 import sys
-sys.path.append('../')
+
+sys.path.append("../")
 from math import cos, radians, degrees, sin, atan2, pi, sqrt, asin
 import threading
 
+
 # Class that computes functions related to location of Rover
 # TODO: Make sure that the current GPS outputs coordinates
-#       in the same format as the swift, and test out 
+#       in the same format as the swift, and test out
 #       heading and see if that should be computed
 #       somewhere outside of __parse
 class LocationF9P:
@@ -28,30 +30,41 @@ class LocationF9P:
         pass
 
     # Returns distance in kilometers between given latitude and longitude
-    def distance_to(self, lat:float, lon:float):
+    def distance_to(self, lat: float, lon: float):
         earth_radius = 6371.301
-        delta_lat = (lat - self.latitude) * (pi/180.0)
-        delta_lon = (lon - self.longitude) * (pi/180.0)
+        delta_lat = (lat - self.latitude) * (pi / 180.0)
+        delta_lon = (lon - self.longitude) * (pi / 180.0)
 
-        a = sin(delta_lat/2) * sin(delta_lat/2) + cos(self.latitude * (pi/180.0)) * cos(lat * (pi/180.0)) * sin(delta_lon/2) * sin(delta_lon/2)
-        c = 2 * atan2(sqrt(a), sqrt(1-a))
+        a = sin(delta_lat / 2) * sin(delta_lat / 2) + cos(
+            self.latitude * (pi / 180.0)
+        ) * cos(lat * (pi / 180.0)) * sin(delta_lon / 2) * sin(delta_lon / 2)
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
         return earth_radius * c
 
     # Calculates difference between given bearing to location and current bearing
     # Positive is turn right, negative is turn left
-    def bearing_to(self, lat:float, lon:float):
-        resultbearing = self.calc_bearing(self.latitude, self.longitude, lat, lon) - self.bearing
-        return resultbearing + 360 if resultbearing < -180 else (resultbearing - 360 if resultbearing > 180 else resultbearing)
+    def bearing_to(self, lat: float, lon: float):
+        result_bearing = (
+            self.calc_bearing(self.latitude, self.longitude, lat, lon) - self.bearing
+        )
+        return (
+            result_bearing + 360
+            if result_bearing < -180
+            else (result_bearing - 360 if result_bearing > 180 else result_bearing)
+        )
 
     # Starts updating fields from the GPS box
     def start_GPS_thread(self):
         if self.device_open_file == None:
-            print("[Location-f9p.py] start_GPS_thread was called before opening the gps /dev/ entry - start_GPS will be called now")
+            print(
+                "[Location-f9p.py] start_GPS_thread was called before opening the gps /dev/ entry - start_GPS will be called now"
+            )
             self.start_GPS()
 
         self.running = True
-        t = threading.Thread(target=self.update_fields_loop, name=(
-                'update GPS fields'), args=())
+        t = threading.Thread(
+            target=self.update_fields_loop, name=("update GPS fields"), args=()
+        )
         t.daemon = True
         t.start()
 
@@ -63,7 +76,7 @@ class LocationF9P:
         self.device_open_file = open(self.device_path)
 
     def update_fields_loop(self):
-        while(self.running):
+        while self.running:
             line_read = self.device_open_file.readline()
             self.__parse(line_read)
         return
@@ -120,7 +133,9 @@ class LocationF9P:
                     -1 if split[4] == "W" else 1
                 )
 
-                self.bearing = self.calc_bearing(self.old_latitude, self.old_longitude, self.latitude, self.longitude)
+                self.bearing = self.calc_bearing(
+                    self.old_latitude, self.old_longitude, self.latitude, self.longitude
+                )
             elif not (
                 message_str == "\n" or message_str == "\r\n" or message_str == ""
             ) and not message_str.startswith("$"):
@@ -128,26 +143,28 @@ class LocationF9P:
                     "got weird message: " + message_str + " of len " + str(len(split))
                 )
 
-    # Calculates bearing between two points. 
+    # Calculates bearing between two points.
     # (0 is North, 90 is East, +/-180 is South, -90 is West)
-    def calc_bearing(self,lat1:float, lon1:float, lat2:float, lon2:float):
-        x = cos(lat2 * (pi/180.0)) * sin((lon2-lon1) * (pi/180.0))
-        y = cos(lat1 * (pi/180.0)) * sin(lat2 * (pi/180.0)) - sin(lat1 * (pi/180.0)) * cos(lat2 * (pi/180.0)) * cos((lon2-lon1) * (pi/180.0))
-        return (180.0/pi) * atan2(x,y)
+    def calc_bearing(self, lat1: float, lon1: float, lat2: float, lon2: float):
+        x = cos(lat2 * (pi / 180.0)) * sin((lon2 - lon1) * (pi / 180.0))
+        y = cos(lat1 * (pi / 180.0)) * sin(lat2 * (pi / 180.0)) - sin(
+            lat1 * (pi / 180.0)
+        ) * cos(lat2 * (pi / 180.0)) * cos((lon2 - lon1) * (pi / 180.0))
+        return (180.0 / pi) * atan2(x, y)
 
     # Calculate latitutde and longitude given distance (in km) and bearing (in degrees)
-    def get_coordinates(self, distance:float, bearing:float):
+    def get_coordinates(self, distance: float, bearing: float):
         # https://stackoverflow.com/questions/7222382/get-lat-long-given-current-point-distance-and-bearing
         R = 6371.301
-        brng = radians(bearing)      # Assuming bearing is in degrees
+        brng = radians(bearing)  # Assuming bearing is in degrees
         d = distance
 
-        lat1 = radians(self.latitude)   # Current lat point converted to radians
+        lat1 = radians(self.latitude)  # Current lat point converted to radians
         lon1 = radians(self.longitude)  # Current long point converted to radians
 
-        lat2 = asin(sin(lat1)*cos(d/R) + 
-                    cos(lat1)*sin(d/R)*cos(brng))
-        lon2 = lon1 + atan2(sin(brng)*sin(d/R)*cos(lat1),
-                            cos(d/R)-sin(lat1)*sin(lat2))
+        lat2 = asin(sin(lat1) * cos(d / R) + cos(lat1) * sin(d / R) * cos(brng))
+        lon2 = lon1 + atan2(
+            sin(brng) * sin(d / R) * cos(lat1), cos(d / R) - sin(lat1) * sin(lat2)
+        )
 
         return degrees(lat2), degrees(lon2)
