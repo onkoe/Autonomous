@@ -47,22 +47,6 @@ class ARTracker:
         self.frame_width = int(config["ARTRACKER"]["FRAME_WIDTH"])
         self.frame_height = int(config["ARTRACKER"]["FRAME_HEIGHT"])
 
-        # sets up yolo
-        # TODO: Get rid of this?
-        if use_YOLO:
-            os.chdir(darknetPath)
-            weights = config["YOLO"]["WEIGHTS"]
-            cfg = config["YOLO"]["CFG"]
-            data = config["YOLO"]["DATA"]
-            self.thresh = float(config["YOLO"]["THRESHOLD"])
-            self.network, self.class_names, self.class_colors = load_network(
-                cfg, data, weights, 1
-            )
-            os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-            self.network_width = darknet.network_width(self.network)
-            self.network_height = darknet.network_height(self.network)
-
         # Initialize video writer, fps is set to 5
         if self.write:
             self.video_writer = cv2.VideoWriter(
