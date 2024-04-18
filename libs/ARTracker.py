@@ -2,6 +2,7 @@ import cv2
 import cv2.aruco as aruco
 import configparser
 import os
+from typing import List
 
 from loguru import logger
 
