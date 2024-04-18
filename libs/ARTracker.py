@@ -17,6 +17,15 @@ class ARTracker:
     # TODO: Add type declarations
     # TODO: Can we not have our initialization function be over 80 lines?
     def __init__(self, cameras: List[int], write: bool = False, use_YOLO: bool = False, config_file: str ="config.ini") -> None:
+        """
+        Constructs a new ARTracker.
+        
+        - `cameras` is a list of OpenCV camera values.
+        - `write` tells the camera to save video files.
+        - `config_file` is a path to the config file (relative or absolute).
+        """
+        
+        
         self.write = write
         self.distance_to_marker = -1
         self.angle_to_marker = -999.9
@@ -100,6 +109,11 @@ class ARTracker:
     # TODO: Get rid of anything relating to id2
     # markerFound
     def marker_found(self, id1: int, image, id2: int = -1) -> bool:
+        """
+        Attempts to find a marker with the given `id1` in the provided `image`.
+        
+        Returns true if found.
+        """
         
         found = False
         
@@ -190,12 +204,15 @@ class ARTracker:
         ) / width_of_marker
 
 
-    """
-    id1 is the marker you want to look for
-    cameras=number of cameras to check. -1 for all of them
-    """
-
-    def find_marker(self, id1: int, id2:int = -1, cameras = -1) -> bool:
+    def find_marker(self, id1: int, id2: int = -1, cameras = -1) -> bool:
+        """
+        This method attempts to find a marker with the given ID. 
+        Returns true if found.
+        
+        `id1` is the marker you want to look for.
+        `cameras` is the number of cameras to check. -1 for all of them
+        """
+        
         if cameras == -1:
             cameras = len(self.caps)
 
