@@ -51,7 +51,7 @@ class ARTracker:
         if self.write:
             self.video_writer = cv2.VideoWriter(
                 "autonomous.avi",
-                cv2.VideoWriter_fourcc(
+                cv2.VideoWriter.fourcc(
                     self.format[0], self.format[1], self.format[2], self.format[3]
                 ),
                 5,
@@ -60,7 +60,7 @@ class ARTracker:
             )
 
         # Set the ar marker dictionary
-        self.marker_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
+        self.marker_dict = aruco.DICT_4X4_50
 
         # Initialize cameras
         # TODO: Could this be in a function
@@ -85,7 +85,7 @@ class ARTracker:
                 )  # greatly speeds up the program but the writer is a bit wack because of this
                 cam.set(
                     cv2.CAP_PROP_FOURCC,
-                    cv2.VideoWriter_fourcc(
+                    cv2.VideoWriter.fourcc(
                         self.format[0], self.format[1], self.format[2], self.format[3]
                     ),
                 )
@@ -109,9 +109,11 @@ class ARTracker:
         # tries converting to b&w using different different cutoffs to find the perfect one for the current lighting
         for i in range(40, 221, 60):
             bw = cv2.threshold(image, i, 255, cv2.THRESH_BINARY)[1]
-            (self.corners, self.marker_IDs, self.rejected) = aruco.detectMarkers(
-                bw, self.marker_dict
+            detector = aruco.ArucoDetector(
+                aruco.getPredefinedDictionary(self.marker_dict)
             )
+
+            (self.corners, self.marker_IDs, self.rejected) = detector.detectMarkers(bw)
             if self.marker_IDs is not None:
                 # single post
                 self.index1 = -1
