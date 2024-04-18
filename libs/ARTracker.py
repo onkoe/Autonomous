@@ -99,7 +99,10 @@ class ARTracker:
     # id1 is the main ar tag to telating to id2, since gateposts are no longrack, id2 is not relevant, image is the image to analyze
     # TODO: Get rid of anything relating to id2
     # markerFound
-    def marker_found(self, id1: int, image, id2:int = -1) -> None:
+    def marker_found(self, id1: int, image, id2: int = -1) -> bool:
+        
+        found = False
+        
         # converts to grayscale
         cv2.cvtColor(image, cv2.COLOR_RGB2GRAY, image)
 
@@ -125,10 +128,13 @@ class ARTracker:
 
                 if self.index1 != -1:
                     logger.info("Found the correct marker!")
+                    found = True
                     if self.write:
                         self.video_writer.write(bw)  # purely for debug
                         cv2.waitKey(1)
                     break
+                
+        return found
     
         center_x_marker = (
             self.corners[self.index1][0][0][0]
