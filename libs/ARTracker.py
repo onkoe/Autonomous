@@ -7,21 +7,27 @@ from cv2 import Mat
 
 from loguru import logger
 
+
 # TODO(bray): `dataclasses`
-class ARTracker:    
+class ARTracker:
     # TODO: Get rid of use_yolo?
     # TODO: Add type declarations
     # TODO: Can we not have our initialization function be over 80 lines?
-    def __init__(self, cameras: List[int], write: bool = False, use_YOLO: bool = False, config_file: str ="config.ini") -> None:
+    def __init__(
+        self,
+        cameras: List[int],
+        write: bool = False,
+        use_YOLO: bool = False,
+        config_file: str = "config.ini",
+    ) -> None:
         """
         Constructs a new ARTracker.
-        
+
         - `cameras` is a list of OpenCV camera values.
         - `write` tells the camera to save video files.
         - `config_file` is a path to the config file (relative or absolute).
         """
-        
-        
+
         self.write = write
         self.distance_to_marker = -1
         self.angle_to_marker = -999.9
@@ -35,8 +41,9 @@ class ARTracker:
         if not config.read(config_file):
             logger.info("ERROR OPENING AR CONFIG:")
             if os.path.isabs(config_file):
-                print(config_file)
+                print(config_file)  # print the absolute path
             else:
+                # print the full relative path
                 print(f"{os.getcwd()}/{config_file}")
             exit(-2)
 
@@ -64,12 +71,12 @@ class ARTracker:
                 False,
             )
 
-        # Set the ar marker dictionary
+        # Set the ARUCO marker dictionary
         self.marker_dict = aruco.DICT_4X4_50
 
         # Initialize cameras
         # TODO: Could this be in a function
-        # TODO: Also replace with logger 
+        # TODO: Also replace with logger
         self.caps = []
         if isinstance(self.cameras, int):
             self.cameras = [self.cameras]
@@ -78,27 +85,29 @@ class ARTracker:
             while True:
                 cam = cv2.VideoCapture(self.cameras[i])
                 if not cam.isOpened():
-                    logger.info(
-                        f"!!!!!!!!!!!!!!!!!!!!!!!!!!Camera {i} did not open!!!!!!!!!!!!!!!!!!!!!!!!!!",
-                    )
+                    logger.warning(f"!!!!!!!!!!!!Camera {i} did not open!!!!!!!!!!!!!!")
                     cam.release()
                     continue
                 cam.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
                 cam.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
-                cam.set(
-                    cv2.CAP_PROP_BUFFERSIZE, 1
-                )  # greatly speeds up the program but the writer is a bit wack because of this
+
+                # greatly speeds up the program but the writer is a bit wack because of this
+                # (it makes the camera store only one frame at a time)
+                cam.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
+                # fourcc is the codec used to encode the video (generally)
                 cam.set(
                     cv2.CAP_PROP_FOURCC,
                     cv2.VideoWriter.fourcc(
                         self.format[0], self.format[1], self.format[2], self.format[3]
                     ),
                 )
-                # ret, testIm =  self.caps[i].read()[0]
+                # the 0th value of the tuple is a bool, true if we got a frame
+                # so, in other words: if we didn't read, stop using the camera device
                 if not cam.read()[0]:
                     cam.release()
-                else:
-                    self.caps.append(cam)
+                else:  # if we did get a frame...
+                    self.caps.append(cam)  # add to our list of cameras
                     break
 
     # id1 is the main ar tag to telating to id2, since gateposts are no longrack, id2 is not relevant, image is the image to analyze
@@ -107,13 +116,15 @@ class ARTracker:
     def marker_found(self, id1: int, image, id2: int = -1) -> bool:
         """
         Attempts to find a marker with the given `id1` in the provided `image`.
-        
+
         Returns true if found.
         """
-        
+
         found = False
-        
+
         # converts to grayscale
+        # TODO(bray): we should do `grayscale = cv2.cvt_color(...)`
+        #       otherwise, we're modifying the input image and that's fucked up
         cv2.cvtColor(image, cv2.COLOR_RGB2GRAY, image)
 
         self.index1 = -1
@@ -121,6 +132,7 @@ class ARTracker:
         bw = image  # will hold the black and white image
         # tries converting to b&w using different different cutoffs to find the perfect one for the current lighting
         for i in range(40, 221, 60):
+            # FIXME(bray): use logan's pr man!
             bw = cv2.threshold(image, i, 255, cv2.THRESH_BINARY)[1]
             detector = aruco.ArucoDetector(
                 aruco.getPredefinedDictionary(self.marker_dict)
@@ -128,7 +140,6 @@ class ARTracker:
 
             (self.corners, self.marker_IDs, self.rejected) = detector.detectMarkers(bw)
             if self.marker_IDs is not None:
-                # single post
                 self.index1 = -1
                 # this just checks to make sure that it found the right marker
                 for m in range(len(self.marker_IDs)):
@@ -136,16 +147,16 @@ class ARTracker:
                         self.index1 = m
                         break
 
-                if self.index1 != -1:
+                if self.index1 != -1:  # if we changed the id of the ARUCO tag...
                     logger.info("Found the correct marker!")
                     found = True
                     if self.write:
                         self.video_writer.write(bw)  # purely for debug
+                        # FIXME(bray): this is likely a bug. wait_key()'s delay
+                        # input is in milliseconds! and 1 ms is not very long...
                         cv2.waitKey(1)
                     break
-                
-        return found
-    
+
         center_x_marker = (
             self.corners[self.index1][0][0][0]
             + self.corners[self.index1][0][1][0]
@@ -157,7 +168,7 @@ class ARTracker:
         self.angle_to_marker = self.degrees_per_pixel * (
             center_x_marker - self.frame_width / 2
         )
-        
+
         """
         distanceToAR = (knownWidthOfMarker(20cm) * focalLengthOfCamera) / pixelWidthOfMarker
         focal_length = focal length at 0 degrees horizontal and 0 degrees vertical
@@ -169,7 +180,7 @@ class ARTracker:
         If focal_length30H and focal_length30V both equal focal_length then realFocalLength = focal_length which is good for non huddly cameras
         Please note that the realFocalLength calculation is an approximation that could be much better if anyone wants to try to come up with something better
         """
-        #hangle, vangle = horizontal, vertical angle
+        # hangle, vangle = horizontal, vertical angle
         hangle_to_marker = abs(self.angle_to_marker)
         center_y_marker = (
             self.corners[self.index1][0][0][1]
@@ -186,29 +197,25 @@ class ARTracker:
             + (vangle_to_marker / 30) * (self.focal_length30V - self.focal_length)
         )
         width_of_marker = (
-            (
-                self.corners[self.index1][0][1][0]
-                - self.corners[self.index1][0][0][0]
-            )
-            + (
-                self.corners[self.index1][0][2][0]
-                - self.corners[self.index1][0][3][0]
-            )
+            (self.corners[self.index1][0][1][0] - self.corners[self.index1][0][0][0])
+            + (self.corners[self.index1][0][2][0] - self.corners[self.index1][0][3][0])
         ) / 2
         self.distance_to_marker = (
             self.known_marker_width * realFocalLength
         ) / width_of_marker
-
-
-    def find_marker(self, id1: int, id2: int = -1, cameras = -1) -> bool:
-        """
-        This method attempts to find a marker with the given ID. 
-        Returns true if found.
         
+        return found
+
+
+    def find_marker(self, id1: int, id2: int = -1, cameras: int = -1) -> bool:
+        """
+        This method attempts to find a marker with the given ID.
+        Returns true if found.
+
         `id1` is the marker you want to look for.
         `cameras` is the number of cameras to check. -1 for all of them
         """
-        
+
         if cameras == -1:
             cameras = len(self.caps)
 
