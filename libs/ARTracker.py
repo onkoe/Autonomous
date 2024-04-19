@@ -3,16 +3,12 @@ import cv2.aruco as aruco
 import configparser
 import os
 from typing import List
+from cv2 import Mat
 
 from loguru import logger
 
 # TODO(bray): `dataclasses`
-class ARTracker:
-    # Constructor
-    # Cameras should be a list of file paths to cameras that are to be used
-    # set write to True to write to disk what the cameras are seeing
-    # set use_YOLO to True to use yolo when attempting to detect the ar tags
-    
+class ARTracker:    
     # TODO: Get rid of use_yolo?
     # TODO: Add type declarations
     # TODO: Can we not have our initialization function be over 80 lines?
