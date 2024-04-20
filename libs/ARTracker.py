@@ -119,13 +119,11 @@ class ARTracker:
         found = False
 
         # converts to grayscale
-        # TODO(bray): we should do `grayscale = cv2.cvt_color(...)`
-        #       otherwise, we're modifying the input image and that's fucked up
-        cv2.cvtColor(image, cv2.COLOR_RGB2GRAY, image)
+        grayscale = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY, image)
 
         self.index1 = -1
         self.index2 = -1
-        bw = image  # will hold the black and white image
+        bw = grayscale
         # tries converting to b&w using different different cutoffs to find the perfect one for the current lighting
         for i in range(40, 221, 60):
             # FIXME(bray): use logan's pr man!
