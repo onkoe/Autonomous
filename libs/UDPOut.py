@@ -1,11 +1,8 @@
 import socket
 
-from numpy import byte
-
 
 def send_UDP(HOST, PORT, message):
     # sends a message over UDP to a specific host and port
-    BUFFERSIZE = 1024
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         s.connect((HOST, PORT))
         s.sendall(message)

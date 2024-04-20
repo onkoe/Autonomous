@@ -3,14 +3,11 @@ from threading import Timer
 import configparser
 import os
 from typing import Tuple
-
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import math
 from time import sleep
-from nis import maps
-
 import sys
 
+# FIXME(bray): we should be building rovermap into a package. that'd make importing easier
 sys.path.append("../../Mission Control/RoverMap/")  # TODO: PLEASE FIX ME
 from server import MapServer
 
