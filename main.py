@@ -1,11 +1,12 @@
 import argparse
-import configparser
 from libs import UDPOut
 from libs import Drive
 import threading
 from time import sleep
 from typing import Tuple
 from loguru import logger
+from pathlib import Path
+from configparser import ConfigParser
 
 
 def flash(mbedIP: str, mbedPort: int) -> None:
@@ -120,10 +121,10 @@ def drive(
 
 if __name__ == "__main__":
     # Try to read from configuration file
-    config: configparser = configparser.ConfigParser(allow_no_value=True)
+    config: ConfigParser = ConfigParser(allow_no_value=True)
     if not config.read("config.ini"):
         raise Exception(
-            "Failed to open configuration file! Please ensure `config.ini` exists in this directory."
+            f"Failed to open configuration file! Please ensure `config.ini` exists in this directory ({Path.cwd()})."
         )
 
     # Get MBED IP and MBED Port
