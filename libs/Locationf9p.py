@@ -55,7 +55,7 @@ class LocationF9P:
 
     # Starts updating fields from the GPS box
     def start_GPS_thread(self):
-        if self.device_open_file == None:
+        if self.device_open_file is None:
             print(
                 "[Location-f9p.py] start_GPS_thread was called before opening the gps /dev/ entry - start_GPS will be called now"
             )
@@ -77,8 +77,9 @@ class LocationF9P:
 
     def update_fields_loop(self):
         while self.running:
-            line_read = self.device_open_file.readline()
-            self.__parse(line_read)
+            if self.device_open_file is not None:
+                line_read = self.device_open_file.readline()
+                self.__parse(line_read)
         return
 
     # Parse NMEA messages read from the GPS.
