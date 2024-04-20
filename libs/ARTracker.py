@@ -3,9 +3,8 @@ import cv2.aruco as aruco
 import configparser
 import os
 from typing import List
-from cv2 import Mat
-
 from loguru import logger
+from time import sleep
 
 
 # TODO(bray): `dataclasses`
@@ -83,6 +82,7 @@ class ARTracker:
                 if not cam.isOpened():
                     logger.warning(f"!!!!!!!!!!!!Camera {i} did not open!!!!!!!!!!!!!!")
                     cam.release()
+                    sleep(0.4)  # wait a moment to try again!
                     continue
                 cam.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
                 cam.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
@@ -129,7 +129,7 @@ class ARTracker:
         # tries converting to b&w using different different cutoffs to find the perfect one for the current lighting
         for i in range(40, 221, 60):
             # FIXME(bray): use logan's pr man!
-            bw = cv2.threshold(image, i, 255, cv2.THRESH_BINARY)[1]
+            bw = cv2.threshold(grayscale, i, 255, cv2.THRESH_BINARY)[1]
             detector = aruco.ArucoDetector(
                 aruco.getPredefinedDictionary(self.marker_dict)
             )
@@ -153,6 +153,7 @@ class ARTracker:
                         cv2.waitKey(1)
                     break
 
+        # TODO(teeler): Can we just replace this with cv2.arcuo.estimatePoseSingleMarkers(...)
         center_x_marker = (
             self.corners[self.index1][0][0][0]
             + self.corners[self.index1][0][1][0]
@@ -161,6 +162,7 @@ class ARTracker:
         ) / 4
         # takes the pixels from the marker to the center of the image and multiplies it by the degrees per pixel
         # FIXME(bray): wow yeah thanks for the comment, but why?
+        # FIXME(llar): this is making me cry, is this referencing coordinates on the aruco tag?? using x / y coordinate axis?
         self.angle_to_marker = self.degrees_per_pixel * (
             center_x_marker - self.frame_width / 2
         )
@@ -199,9 +201,8 @@ class ARTracker:
         self.distance_to_marker = (
             self.known_marker_width * realFocalLength
         ) / width_of_marker
-        
-        return found
 
+        return found
 
     def find_marker(self, id1: int, id2: int = -1, cameras: int = -1) -> bool:
         """
