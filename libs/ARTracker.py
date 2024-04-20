@@ -10,14 +10,12 @@ from loguru import logger
 
 # TODO(bray): `dataclasses`
 class ARTracker:
-    # TODO: Get rid of use_yolo?
     # TODO: Add type declarations
     # TODO: Can we not have our initialization function be over 80 lines?
     def __init__(
         self,
         cameras: List[int],
         write: bool = False,
-        use_YOLO: bool = False,
         config_file: str = "config.ini",
     ) -> None:
         """
@@ -33,10 +31,10 @@ class ARTracker:
         self.angle_to_marker = -999.9
         self.index1 = -1
         self.index2 = -1
-        self.use_YOLO = use_YOLO
         self.cameras = cameras
 
         # Open the config file
+        # TODO: Could this be in a function
         config = configparser.ConfigParser(allow_no_value=True)
         if not config.read(config_file):
             logger.info("ERROR OPENING AR CONFIG:")
@@ -48,7 +46,6 @@ class ARTracker:
             exit(-2)
 
         # Set variables from the config file
-        # TODO: Could this be in a function
         self.degrees_per_pixel = float(config["ARTRACKER"]["DEGREES_PER_PIXEL"])
         self.vdegrees_per_pixel = float(config["ARTRACKER"]["VDEGREES_PER_PIXEL"])
         self.focal_length = float(config["ARTRACKER"]["FOCAL_LENGTH"])
@@ -76,7 +73,6 @@ class ARTracker:
 
         # Initialize cameras
         # TODO: Could this be in a function
-        # TODO: Also replace with logger
         self.caps = []
         if isinstance(self.cameras, int):
             self.cameras = [self.cameras]
