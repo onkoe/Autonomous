@@ -1,7 +1,7 @@
 from time import sleep
-from libs import ARTracker
+from libs import aruco_tracker
 
-tracker = ARTracker.ARTracker([0], write=False) #ARTracker requires a list of camera files
+tracker = aruco_tracker.ARTracker([0], write=False) #ARTracker requires a list of camera files
 
 while True:
     tracker.find_marker(1)#, id2 = 1)

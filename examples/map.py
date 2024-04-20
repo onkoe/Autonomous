@@ -1,13 +1,9 @@
-from nis import maps
 import os
-from random import randint, random
-
 from scipy import rand
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
 import threading
-
 import sys
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append('../../Mission Control/RoverMap/')
 
 from server import MapServer

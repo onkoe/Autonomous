@@ -1,6 +1,6 @@
 import argparse
-from libs import UDPOut
-from libs import Drive
+from libs import udp_out
+from libs.drive import Drive
 import threading
 from time import sleep
 from typing import Tuple
@@ -16,9 +16,9 @@ def flash(mbedIP: str, mbedPort: int) -> None:
     This is used to show that the rover successfully navigated to a goal.
     """
     while True:
-        UDPOut.send_LED(mbedIP, mbedPort, "g")
+        udp_out.send_LED(mbedIP, mbedPort, "g")
         sleep(0.2)
-        UDPOut.send_LED(mbedIP, mbedPort, "o")
+        udp_out.send_LED(mbedIP, mbedPort, "o")
         sleep(0.2)
 
 
@@ -135,9 +135,9 @@ if __name__ == "__main__":
     aruco_ids, gps_coordinates = parse_arguments()
 
     # Initailze REMI!!
-    rover: Drive = Drive.Drive(50, args.cameraInput)
+    rover: Drive = Drive(50, args.cameraid)
 
-    UDPOut.send_LED(
+    udp_out.send_LED(
         mbed_ip, mbed_port, "r"
     )  # Change the LED to red to show REMI is entering Autonomous mode
 

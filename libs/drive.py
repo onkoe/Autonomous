@@ -9,17 +9,19 @@ import sys
 
 # FIXME(bray): we should be building rovermap into a package. that'd make importing easier
 sys.path.append("../../Mission Control/RoverMap/")  # TODO: PLEASE FIX ME
+sys.path.append("../SoonerRoverTeamVI/Mission Control/RoverMap/")
+sys.path.append("../RoverMap/")
 from server import MapServer
 
-from libs import UDPOut
-from libs import Location
-from libs import ARTracker
+from libs import udp_out
+from libs import location
+from libs import aruco_tracker
 
 
 class Drive:
     def __init__(self, base_speed, cameras):
         self.base_speed = base_speed
-        self.tracker = ARTracker.ARTracker(cameras)
+        self.tracker = aruco_tracker.ARTracker(cameras)
 
         # Starts everything needed by the map
         self.map_server = MapServer()
@@ -37,7 +39,7 @@ class Drive:
         self.mbed_port = int(config["CONFIG"]["MBED_PORT"])
         swift_IP = str(config["CONFIG"]["SWIFT_IP"])
         swift_port = str(config["CONFIG"]["SWIFT_PORT"])
-        self.gps = Location.Location(swift_IP, swift_port)
+        self.gps = location.Location(swift_IP, swift_port)
         self.gps.start_GPS()
 
         self.speeds = [0, 0]
@@ -70,7 +72,7 @@ class Drive:
             # left and right speed
             ls = int(self.speeds[0])
             rs = int(self.speeds[1])
-            UDPOut.send_wheel_speeds(
+            udp_out.send_wheel_speeds(
                 self.mbed_IP, self.mbed_port, ls, ls, ls, rs, rs, rs
             )
             sleep(0.1)
