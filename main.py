@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
     # Drive to our goal and if we succeed, flash the LEDs green
     if drive(rover, gps_coordinates, aruco_ids):
-        logger.info("Made it goal! Flash the LEDs green!")
+        logger.info("Made it to the goal! Flash the LEDs green!")
         lights = threading.Thread(target=lambda: flash(mbed_ip, mbed_port))
         lights.start()
         input("Press enter to end flashing lights")
