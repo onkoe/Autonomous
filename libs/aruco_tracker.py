@@ -151,54 +151,62 @@ class ARTracker:
                         cv2.waitKey(1)
                     break
 
-        # TODO(teeler): Can we just replace this with cv2.arcuo.estimatePoseSingleMarkers(...)
-        center_x_marker = (
-            self.corners[self.index1][0][0][0]
-            + self.corners[self.index1][0][1][0]
-            + self.corners[self.index1][0][2][0]
-            + self.corners[self.index1][0][3][0]
-        ) / 4
-        # takes the pixels from the marker to the center of the image and multiplies it by the degrees per pixel
-        # FIXME(bray): wow yeah thanks for the comment, but why?
-        # FIXME(llar): this is making me cry, is this referencing coordinates on the aruco tag?? using x / y coordinate axis?
-        self.angle_to_marker = self.degrees_per_pixel * (
-            center_x_marker - self.frame_width / 2
-        )
+        # we need to check if we've found it or not. so...
+        if self.index1 != -1:
+            # TODO(teeler): Can we just replace this with cv2.arcuo.estimatePoseSingleMarkers(...)
+            center_x_marker = (
+                self.corners[self.index1][0][0][0]
+                + self.corners[self.index1][0][1][0]
+                + self.corners[self.index1][0][2][0]
+                + self.corners[self.index1][0][3][0]
+            ) / 4
+            # takes the pixels from the marker to the center of the image and multiplies it by the degrees per pixel
+            # FIXME(bray): wow yeah thanks for the comment, but why?
+            # FIXME(llar): this is making me cry, is this referencing coordinates on the aruco tag?? using x / y coordinate axis?
+            self.angle_to_marker = self.degrees_per_pixel * (
+                center_x_marker - self.frame_width / 2
+            )
 
-        """
-        distanceToAR = (knownWidthOfMarker(20cm) * focalLengthOfCamera) / pixelWidthOfMarker
-        focal_length = focal length at 0 degrees horizontal and 0 degrees vertical
-        focal_length30H = focal length at 30 degreees horizontal and 0 degrees vertical
-        focal_length30V = focal length at 30 degrees vertical and 0 degrees horizontal
-        realFocalLength of camera = focal_length 
-                                    + (horizontal angle to marker/30) * (focal_length30H - focal_length)
-                                    + (vertical angle to marker / 30) * (focal_length30V - focal_length)
-        If focal_length30H and focal_length30V both equal focal_length then realFocalLength = focal_length which is good for non huddly cameras
-        Please note that the realFocalLength calculation is an approximation that could be much better if anyone wants to try to come up with something better
-        """
-        # hangle, vangle = horizontal, vertical angle
-        hangle_to_marker = abs(self.angle_to_marker)
-        center_y_marker = (
-            self.corners[self.index1][0][0][1]
-            + self.corners[self.index1][0][1][1]
-            + self.corners[self.index1][0][2][1]
-            + self.corners[self.index1][0][3][1]
-        ) / 4
-        vangle_to_marker = abs(
-            self.vdegrees_per_pixel * (center_y_marker - self.frame_height / 2)
-        )
-        realFocalLength = (
-            self.focal_length
-            + (hangle_to_marker / 30) * (self.focal_length30H - self.focal_length)
-            + (vangle_to_marker / 30) * (self.focal_length30V - self.focal_length)
-        )
-        width_of_marker = (
-            (self.corners[self.index1][0][1][0] - self.corners[self.index1][0][0][0])
-            + (self.corners[self.index1][0][2][0] - self.corners[self.index1][0][3][0])
-        ) / 2
-        self.distance_to_marker = (
-            self.known_marker_width * realFocalLength
-        ) / width_of_marker
+            """
+            distanceToAR = (knownWidthOfMarker(20cm) * focalLengthOfCamera) / pixelWidthOfMarker
+            focal_length = focal length at 0 degrees horizontal and 0 degrees vertical
+            focal_length30H = focal length at 30 degreees horizontal and 0 degrees vertical
+            focal_length30V = focal length at 30 degrees vertical and 0 degrees horizontal
+            realFocalLength of camera = focal_length
+                                        + (horizontal angle to marker/30) * (focal_length30H - focal_length)
+                                        + (vertical angle to marker / 30) * (focal_length30V - focal_length)
+            If focal_length30H and focal_length30V both equal focal_length then realFocalLength = focal_length which is good for non huddly cameras
+            Please note that the realFocalLength calculation is an approximation that could be much better if anyone wants to try to come up with something better
+            """
+            # hangle, vangle = horizontal, vertical angle
+            hangle_to_marker = abs(self.angle_to_marker)
+            center_y_marker = (
+                self.corners[self.index1][0][0][1]
+                + self.corners[self.index1][0][1][1]
+                + self.corners[self.index1][0][2][1]
+                + self.corners[self.index1][0][3][1]
+            ) / 4
+            vangle_to_marker = abs(
+                self.vdegrees_per_pixel * (center_y_marker - self.frame_height / 2)
+            )
+            realFocalLength = (
+                self.focal_length
+                + (hangle_to_marker / 30) * (self.focal_length30H - self.focal_length)
+                + (vangle_to_marker / 30) * (self.focal_length30V - self.focal_length)
+            )
+            width_of_marker = (
+                (
+                    self.corners[self.index1][0][1][0]
+                    - self.corners[self.index1][0][0][0]
+                )
+                + (
+                    self.corners[self.index1][0][2][0]
+                    - self.corners[self.index1][0][3][0]
+                )
+            ) / 2
+            self.distance_to_marker = (
+                self.known_marker_width * realFocalLength
+            ) / width_of_marker
 
         return found
 
