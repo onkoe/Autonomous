@@ -1,10 +1,11 @@
-import cv2
-import cv2.aruco as aruco
 import configparser
 import os
-from typing import List
-from loguru import logger
 from time import sleep
+from typing import List
+
+import cv2
+import cv2.aruco as aruco
+from loguru import logger
 
 
 # TODO(bray): `dataclasses`
@@ -59,7 +60,7 @@ class ARTracker:
         if self.write:
             self.video_writer = cv2.VideoWriter(
                 "autonomous.avi",
-                cv2.VideoWriter.fourcc(
+                cv2.VideoWriter_fourcc(
                     self.format[0], self.format[1], self.format[2], self.format[3]
                 ),
                 5,
@@ -68,7 +69,7 @@ class ARTracker:
             )
 
         # Set the ARUCO marker dictionary
-        self.marker_dict = aruco.DICT_4X4_50
+        self.marker_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
 
         # Initialize cameras
         # TODO: Could this be in a function
@@ -94,7 +95,7 @@ class ARTracker:
                 # fourcc is the codec used to encode the video (generally)
                 cam.set(
                     cv2.CAP_PROP_FOURCC,
-                    cv2.VideoWriter.fourcc(
+                    cv2.VideoWriter_fourcc(
                         self.format[0], self.format[1], self.format[2], self.format[3]
                     ),
                 )
@@ -128,11 +129,9 @@ class ARTracker:
         for i in range(40, 221, 60):
             # FIXME(bray): use logan's pr man!
             bw = cv2.threshold(grayscale, i, 255, cv2.THRESH_BINARY)[1]
-            detector = aruco.ArucoDetector(
-                aruco.getPredefinedDictionary(self.marker_dict)
+            (self.corners, self.marker_IDs, self.rejected) = aruco.detectMarkers(
+                bw, self.marker_dict
             )
-
-            (self.corners, self.marker_IDs, self.rejected) = detector.detectMarkers(bw)
             if self.marker_IDs is not None:
                 self.index1 = -1
                 # this just checks to make sure that it found the right marker
