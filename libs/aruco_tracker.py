@@ -110,7 +110,7 @@ class ARTracker:
     # id1 is the main ar tag to telating to id2, since gateposts are no longrack, id2 is not relevant, image is the image to analyze
     # TODO: Get rid of anything relating to id2
     # markerFound
-    def marker_found(self, id1: int, image, id2: int = -1) -> bool:
+    def is_marker_found(self, id1: int, image, id2: int = -1) -> bool:
         """
         Attempts to find a marker with the given `id1` in the provided `image`.
 
@@ -223,7 +223,7 @@ class ARTracker:
 
         for i in range(cameras):
             ret, frame = self.caps[i].read()
-            if self.marker_found(id1, frame, id2=id2):
+            if self.is_marker_found(id1, frame, id2=id2) == True:
                 return True
 
         return False
