@@ -6,12 +6,10 @@ from typing import Tuple
 import math
 from time import sleep
 import sys
+from loguru import logger
 
 # FIXME(bray): we should be building rovermap into a package. that'd make importing easier
-sys.path.append("../../Mission Control/RoverMap/")  # TODO: PLEASE FIX ME
-sys.path.append("../SoonerRoverTeamVI/Mission Control/RoverMap/")
-sys.path.append("../RoverMap/")
-from server import MapServer
+from maps.server import MapServer
 
 from libs import udp_out
 from libs import location
@@ -87,7 +85,7 @@ class Drive:
         @param kp    P value
         @param ki    I value
         """
-        print("Current bearing to objective:", error)
+        logger.info("Current bearing to objective:", error)
 
         # values -> speed_values
         speed_values = [0, 0]  # [Left wheel speeds, right wheel speeds]
@@ -121,66 +119,75 @@ class Drive:
             speed_values[1] = 30
 
         return speed_values
+    
+    #def left_wheel_speed(self) -> int:
 
     # Cleaner way to print out the wheel speeds
     # printSpeeds
     def print_speeds(self):
-        print("Left wheels: ", round(self.speeds[0], 1))
-        print("Right wheels: ", round(self.speeds[1], 1))
+        logger.info(f"Left wheel speed: {self.speeds[0]}")
+        logger.info(f"Right: wheel speed: {self.speeds[1]}")
 
     # Drives along a given list of GPS coordinates while looking for the given ar markers
     # Keep aruco_id2 at -1 if looking for one post, set aruco_id1 to -1 if you aren't looking for AR markers
     # driveAlongCoordinates
     def drive_along_coordinates(
-        self, locations: list[Tuple[float, float]], aruco_id1: int, aruco_id2: int = -1
+        # TODO: use below. doesn't work on old ass python (<3.8)
+        # self, locations: list[Tuple[float, float]], aruco_id1: int, aruco_id2: int = 1
+        self, locations, aruco_id1: int, aruco_id2: int = -1
     ) -> bool:
         # Starts the GPS
+        logger.info("starting gps thread...")
         self.gps.start_GPS_thread()
-        print("Waiting for GPS connection...")
-        # while self.gps.all_zero:
-        #    continue
-        print("Connected to GPS")
+        logger.info("gps is up!")
 
         # backs up and turns to avoid running into the last detected sign. Also allows it to get a lock on heading
         if aruco_id1 > -1:
-            self.speeds = [-60, -60]
+            logger.info("avoiding last detected marker...")
+            self.speeds = [-60, -60] # reverse both sides
             self.print_speeds()
             sleep(2)
-            self.speeds = [0, 0]
+            self.speeds = [0, 0] # stop for a moment
             self.print_speeds()
             sleep(2)
-            self.speeds = [80, 20]
+            self.speeds = [80, 20] # turn right
             self.print_speeds()
             sleep(4)
         else:
-            self.speeds = (self.base_speed, self.base_speed)
+            # otherwise, we drive forward
+            logger.info("no previous marker detected. let's drive forward!")
+            self.speeds = [self.base_speed, self.base_speed]
             self.print_speeds()
             sleep(3)
 
         # navigates to each location
+        logger.info("navigating to each location...")
         for lat, long in locations:
+            distance_checks: int = 0
             self.error_accumulation = 0
 
             while self.gps.distance_to(lat, long) > 0.0025:  # .0025km
+                distance_checks += 1
                 bearing_to = self.gps.bearing_to(lat, long)
-                print(self.gps.distance_to(lat, long))
+                logger.info(f"distance to location ({lat}, {long}): {self.gps.distance_to(lat, long)}")
                 self.speeds = self.get_speeds(
                     # change self.base_speed to base_speed
                     self.base_speed,
                     bearing_to,
                     200,
                 )  # It will sleep for 100ms
-                sleep(0.2)  # Sleeps for 100ms
+                sleep(0.1)  # Sleeps for 100ms
                 self.print_speeds()
+                logger.info(f"distance checked {distance_checks} times")
 
                 if aruco_id1 != -1 and self.tracker.find_marker(aruco_id1, aruco_id2):
                     self.gps.stop_GPS_thread()
-                    print("Found Marker!")
+                    logger.info("Found Marker!")
                     self.speeds = [0, 0]
                     return True
 
         self.gps.stop_GPS_thread()
-        print("Made it to location without seeing marker(s)")
+        logger.warning("Made it to location without seeing marker(s)")
         self.speeds = [0, 0]
         return False
 
@@ -193,24 +200,27 @@ class Drive:
         self.error_accumulation = 0
 
         count = 0
-        # Centers the middle camera with the tag
+        # Pivot the rover until it is in line with the aruco tag
         while self.tracker.angle_to_marker > 14 or self.tracker.angle_to_marker < -14:
+            # If the tag is in the cameras fov, move towards the aruco tag
             if self.tracker.find_marker(
                 aruco_id1, aruco_id2, cameras=1
             ):  # Only looking with the center camera right now
-                if times_not_found == -1:
+                if times_not_found == -1: # FIXME: Why are we checking if it's not found if we see it in the camera's fov
                     self.speeds = [0, 0]
                     sleep(0.5)
                     self.speeds = [self.base_speed, self.base_speed]
                     sleep(0.8)
                     self.speeds = [0, 0]
-                else:
+                else:   # Move towards the rover
                     self.speeds = self.get_speeds(0, self.tracker.angle_to_marker, 100)
-                print(
-                    self.tracker.angle_to_marker, " ", self.tracker.distance_to_marker
+                logger.info(
+                        f"{self.tracker.angle_to_marker} {self.tracker.distance_to_marker}"
                 )
                 times_not_found = 0
-            elif times_not_found == -1:  # Never seen the tag with the main camera
+            # Pivot a back and forth to find rover
+            # FIXME: I think we can delete this
+            elif times_not_found == -1:  
                 if math.ceil(int(count / 20) / 5) % 2 == 1:
                     self.speeds = [self.base_speed + 5, -self.base_speed - 5]
                 else:
@@ -219,10 +229,10 @@ class Drive:
                 times_not_found < 15
             ):  # Lost the tag for less than 1.5 seconds after seeing it with the main camera
                 times_not_found += 1
-                print(f"lost tag {times_not_found} times")
+                logger.warning(f"lost tag {times_not_found} times")
             else:
                 self.speeds = [0, 0]
-                print("lost it")  # TODO this is bad
+                logger.warning("lost it")  # TODO this is bad
                 times_not_found = -1
                 # return False
             self.print_speeds()
@@ -234,7 +244,7 @@ class Drive:
         self.error_accumulation = 0
         print("Locked on and ready to track")
 
-        # Tracks down the tag
+        # Start moving towards the aruco tag
         while (
             self.tracker.distance_to_marker > stop_distance
             or self.tracker.distance_to_marker == -1
