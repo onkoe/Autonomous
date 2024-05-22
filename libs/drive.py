@@ -2,10 +2,8 @@ from threading import Thread
 from threading import Timer
 import configparser
 import os
-from typing import Tuple
 import math
 from time import sleep
-import sys
 from loguru import logger
 
 # FIXME(bray): we should be building rovermap into a package. that'd make importing easier

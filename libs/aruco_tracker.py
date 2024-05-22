@@ -223,7 +223,7 @@ class ARTracker:
 
         for i in range(cameras):
             ret, frame = self.caps[i].read()
-            if self.is_marker_found(id1, frame, id2=id2) == True:
+            if self.is_marker_found(id1, frame, id2=id2):
                 return True
 
         return False
