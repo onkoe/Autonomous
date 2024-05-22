@@ -15,11 +15,13 @@ def flash(mbedIP: str, mbedPort: int) -> None:
 
     This is used to show that the rover successfully navigated to a goal.
     """
+    
     while True:
         udp_out.send_LED(mbedIP, mbedPort, "g")
         sleep(0.2)
         udp_out.send_LED(mbedIP, mbedPort, "o")
         sleep(0.2)
+
 
 
 # Create Argument Parser and parse arguments
@@ -47,7 +49,9 @@ args = arg_parser.parse_args()
 
 
 # TODO: dataclass this function. returning a tuple is ugly and begging for bugs
-def parse_arguments() -> Tuple[list[int], list[Tuple[float, float]]]:
+# TODO: use typing. broken due to old ass python (<3.8)
+#def parse_arguments() -> Tuple[list[int], list[Tuple[float, float]]]:
+def parse_arguments():
     """
     Parses the command line arguments.
 
@@ -58,7 +62,7 @@ def parse_arguments() -> Tuple[list[int], list[Tuple[float, float]]]:
 
     # TODO: refactor `id_list` to use None/pattern matching
     # the ARUCO tag ids that we're looking for
-    aruco_ids: list[int] = [-1, -1]
+    aruco_ids: list[int] = args.ids.copy()
     # coords to drive to (tuple: lat, long)
     gps_coordinates: list[Tuple[float, float]] = []
 
@@ -67,8 +71,6 @@ def parse_arguments() -> Tuple[list[int], list[Tuple[float, float]]]:
         raise Exception(
             "Error while attempting to parse ARUCO IDs. Please enter 2 IDs to search for."
         )
-    # Assign Aruco IDs
-    aruco_ids = args.ids.copy()
 
     # handle the list of coordinates
     with open(args.coords) as file:
@@ -100,7 +102,9 @@ def parse_arguments() -> Tuple[list[int], list[Tuple[float, float]]]:
 # Set id1 to -1 if not looking for a tag
 # TODO: make this a part of a `Rover` class :3
 def drive(
-    rover: Drive, gps_coordinates: list[Tuple[float, float]], aruco_ids: list[int]
+    # TODO: use typing. old ass python (<3.8)
+    #rover: Drive, gps_coordinates: list[Tuple[float, float]], aruco_ids: list[int]
+    rover: Drive, gps_coordinates, aruco_ids
 ) -> bool:
     """
     Given a Drive object, navigate to goal
@@ -109,10 +113,13 @@ def drive(
     """
 
     # Drive along GPS coordinates
-    rover.drive_along_coordinates(gps_coordinates, aruco_ids[0], aruco_ids[1])
+    logger.warning("ok we're driving along the gps coords :3")
+    dac_result = rover.drive_along_coordinates(gps_coordinates, aruco_ids[0], aruco_ids[1])
+    logger.error(f"drive along coordinates returned {dac_result}")
+    
 
     # TODO: Can we have this run in the rover class instead of returning from 'drive_along_coordinates'
-    if aruco_ids[0] == -1:
+    if aruco_ids[0] != -1:
         rover.track_AR_Marker(aruco_ids[0], aruco_ids[1])
 
     return True
@@ -132,11 +139,14 @@ if __name__ == "__main__":
     mbed_port: int = int(config["CONFIG"]["MBED_PORT"])
 
     # Read command line arguments
+    logger.info("parsing command line arugments")
     aruco_ids, gps_coordinates = parse_arguments()
 
     # Initailze REMI!!
+    logger.info("creating a Drive object (init remi)")
     rover: Drive = Drive(50, args.cameraid)
 
+    logger.info("changing led to indicate autonomous mode")
     udp_out.send_LED(
         mbed_ip, mbed_port, "r"
     )  # Change the LED to red to show REMI is entering Autonomous mode
@@ -146,7 +156,8 @@ if __name__ == "__main__":
         logger.info("Made it to the goal! Flash the LEDs green!")
         lights = threading.Thread(target=lambda: flash(mbed_ip, mbed_port))
         lights.start()
-        input("Press enter to end flashing lights")
+        n = input("Press enter to end flashing lights")
+        logger.info("Exiting Program")
         exit()
     else:
         logger.info("!!!YOU FAILED!!!")
