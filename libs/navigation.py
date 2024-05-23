@@ -34,6 +34,8 @@ class Navigation:
     Keeps track of latititude and longitude, distance to objective, and angle to objective.
 
     It also calculates some of these values.
+    
+    The rover should run the `finish` method when it is done navigating.
 
     - `rover_coords`: location of the rover
     - `given_coords`: a given gps coordinate to navigate to. Depending on
@@ -57,6 +59,15 @@ class Navigation:
         self.gps = GpsController(swift_ip, swift_port)
         self.gps.start()
 
+    def finish(self):
+        """
+        Stops the GPS thread and shuts down the GPS controller.
+        
+        This should always be called when the rover finishes navigation.
+        """
+        self.gps.stop()
+        self.gps = None
+    
     def distance_to_object(self, coord: Coordinate) -> float:
         """
         Finds the distance between the rover and `coord`.
