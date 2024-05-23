@@ -37,11 +37,8 @@ class Navigation:
     
     The rover should run the `finish` method when it is done navigating.
 
-    - `rover_coords`: location of the rover
     - `given_coords`: a given gps coordinate to navigate to. Depending on
         section of comp, ARUCO tags will be nearby
-    - `distance_to_objective`: distance in centimeters
-    - `angle_to_objective`: from the rover to objective in degrees
     """
 
     config: Config

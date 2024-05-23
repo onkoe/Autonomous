@@ -18,6 +18,7 @@ class GpsController:
     enabled: bool = False  # whether or not gps comms are enabled
     config: config.Config
 
+    # note: if you change these, make sure to go to GpsReport too
     coordinates: Coordinate = Coordinate(0.0, 0.0)
     height: float = 0.0  # in meters
     time: float = 0.0  # "time of week" in milliseconds
@@ -72,7 +73,23 @@ class GpsController:
                 self.angle = navigation.calculate_angle(
                     self.coordinates, self.previous_coordinates
                 )
+                
+                # TODO: make report and send to navigation thread
 
             sleep(self.SLEEP_TIME)
 
         logger.info("GPS thread: no longer enabled, shutting down...")
+
+@dataclass(kw_only=True)
+class GpsReport:
+    """
+    A container for GPS data. Sendable across threads.
+    """
+    
+    coordinates: Coordinate = Coordinate(0.0, 0.0)
+    height: float = 0.0  # in meters
+    time: float = 0.0  # "time of week" in milliseconds
+    error: float = 0.0  # in millimeters, accounting for vert/horiz error
+    angle: float = 0.0  # in degrees
+    previous_coordinates: Coordinate = Coordinate(0.0, 0.0)
+    
