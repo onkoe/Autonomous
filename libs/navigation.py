@@ -51,8 +51,9 @@ class Navigation:
 
     def __init__(self, swift_ip: int, swift_port: int):
         """
-        Initialize Location object to get coordinates
+        Initializes the navigation to get coordinates.
         """
+        # TODO
         pass
 
     def distance_to_object(self, coord: Coordinate) -> float:
