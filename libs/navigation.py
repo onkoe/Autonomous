@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from geographiclib.geodesic import Geodesic
 from loguru import logger
 
-from libs import config
+from libs.config import Config
 from libs.gps_controller import GpsController
 
 
@@ -42,19 +42,20 @@ class Navigation:
     - `angle_to_objective`: from the rover to objective in degrees
     """
 
-    config: config.Config
-    rover_coords: Coordinate
+    config: Config
     given_coords: Coordinate
-    distance_to_objective: float
-    angle_to_objective: float
-    gps: GpsController
+    gps: GpsController | None = None
 
-    def __init__(self, swift_ip: int, swift_port: int):
+    def __init__(
+        self, config: Config, given_coords: Coordinate, swift_ip: int, swift_port: int
+    ):
         """
         Initializes the navigation to get coordinates.
         """
-        # TODO
-        pass
+        self.given_coords = given_coords
+        self.config = config
+        self.gps = GpsController(swift_ip, swift_port)
+        self.gps.start()
 
     def distance_to_object(self, coord: Coordinate) -> float:
         """
