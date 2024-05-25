@@ -3,9 +3,10 @@ from threading import Thread
 from time import sleep
 
 from loguru import logger
+from geographiclib.geodesic import Geodesic
 
 from gps import gps
-from libs import config, navigation
+from libs import config
 from libs.navigation import Coordinate
 
 
@@ -15,15 +16,15 @@ class GpsController:
     Controls the GPS library.
     """
 
+    conf: config.Config
     enabled: bool = False  # whether or not gps comms are enabled
-    config: config.Config
 
     # note: if you change these, make sure to go to GpsReport too
     coordinates: Coordinate = Coordinate(0.0, 0.0)
     height: float = 0.0  # in meters
     time: float = 0.0  # "time of week" in milliseconds
     error: float = 0.0  # in millimeters, accounting for vert/horiz error
-    angle: float = 0.0  # in degrees
+    true_bearing: float = 0.0  # Bearing from True North
     previous_coordinates: Coordinate = Coordinate(0.0, 0.0)
 
     SLEEP_TIME: float = 0.1
@@ -38,7 +39,7 @@ class GpsController:
         """
         Starts the GPS thread and connects to the GPS hardware itself.
         """
-        gps.gps_init(self.config.swift_ip(), self.config.swift_port())
+        gps.gps_init(self.conf.gps_ip(), self.conf.gps_port())
         self.enabled = True
 
         logger.info("Starting GPS thread...")
@@ -69,9 +70,9 @@ class GpsController:
                 self.time = gps.get_time()
                 self.error = gps.get_error()
 
-                # calculate angle ("bearing") between new and old coordinates
-                self.angle = navigation.calculate_angle(
-                    self.coordinates, self.previous_coordinates
+                # calculate true bearing between new and old coordinates
+                self.true_bearing = calculate_true_bearing(
+                    self.previous_coordinates, self.coordinates
                 )
                 
                 # TODO: make report and send to navigation thread
@@ -80,17 +81,40 @@ class GpsController:
 
         logger.info("GPS thread: no longer enabled, shutting down...")
 
-@dataclass(kw_only=True)
+
+def calculate_true_bearing(prev_coords: Coordinate, curr_coords: Coordinate) -> float:
+    """
+    Calculate the True Bearing for an object given its current position and previous position.
+    NOTE: True bearing is the bearing relative to North
+
+    - `co1`: first coordinate.
+    - `co2`: second coordinate.
+    """
+    earth = Geodesic.WGS84
+
+    res = earth.Inverse(
+        prev_coords.get_latitude(),
+        prev_coords.get_longitude(),
+        curr_coords.get_latitude(),
+        curr_coords.get_longitude(),
+    )
+    true_bearing: float = res["azi1"]
+
+    logger.debug(f"True bearing: `{true_bearing}`°")
+    return true_bearing
+
+
 @dataclass()
 class GpsReport:
     """
     A container for GPS data. Sendable across threads.
     """
-    
-    coordinates: Coordinate = Coordinate(0.0, 0.0)
+
+    # important: ensure you keep these fields matched with GpsController
+    current_coordinates: Coordinate = Coordinate(0.0, 0.0)
     height: float = 0.0  # in meters
     time: float = 0.0  # "time of week" in milliseconds
     error: float = 0.0  # in millimeters, accounting for vert/horiz error
-    angle: float = 0.0  # in degrees
+    true_bearing: float = 0.0  # in degrees
     previous_coordinates: Coordinate = Coordinate(0.0, 0.0)
     
