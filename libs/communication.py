@@ -26,7 +26,7 @@ class Communication:
         self.socket = Socket(Socket.AF_INET, Socket.SOCK_DGRAM)
         self.socket.connect((c.mbed_ip, c.mbed_port))  # adds ip/port to socket's state
 
-    def send_simple_wheel_speeds(self, left_speed: int, right_speed: int):
+    def send_simple_wheel_speeds(self, left_speed: int, right_speed: int) -> bytearray:
         """
         Sends the given wheel side speeds to the rover. In this case, each
         side uses the same speed for all their wheels.
@@ -36,7 +36,7 @@ class Communication:
         if ls < 0 or ls > 255 or rs < 0 or rs > 255:
             logger.error("HEY, speeds are wrong! `{ls}` and `{rs}` must be in [0, 255]")
 
-        self.send_wheel_speeds(ls, ls, ls, rs, rs, rs)
+        return self.send_wheel_speeds(ls, ls, ls, rs, rs, rs)
 
     def send_wheel_speeds(
         self,
@@ -46,7 +46,7 @@ class Communication:
         front_right: int,
         middle_right: int,
         rear_right: int,
-    ):
+    ) -> bytearray:
         """
         Sends the given wheel speeds to the rover. Each wheel speed goes from
         0 to 255 (u8::MAX), with 126 being neutral.
@@ -69,8 +69,9 @@ class Communication:
         # TODO: consider using Google's QUIC instead!
         self.socket.sendall(message)
         logger.info(f"Sending wheel speeds: {self.__prettyprint_byte_array(message)}")
+        return message
 
-    def send_led_command(self, red: int, green: int, blue: int):
+    def send_led_command(self, red: int, green: int, blue: int) -> bytearray:
         """
         Sends the given LED color to the rover. All colors should be in the
         range of [0, 255].
@@ -81,24 +82,25 @@ class Communication:
         message.extend([self.LED_SUBSYSTEM_BYTE, self.LED_PART_BYTE])
         message.extend([red, green, blue])
         self.socket.sendall(message)
+        
+        logger.info(f"Sending command to LEDs: `{self.__prettyprint_byte_array()}`")
+        return message
 
-        pass
-
-    def send_lights_off(self):
+    def send_lights_off(self) -> bytearray:
         """Turns off the lights."""
-        self.send_led_command(0, 0, 0)
+        return self.send_led_command(0, 0, 0)
 
-    def send_led_red(self):
+    def send_led_red(self) -> bytearray:
         """Makes the LEDs red."""
-        self.send_led_command(255, 0, 0)
+        return self.send_led_command(255, 0, 0)
 
-    def send_led_green(self):
+    def send_led_green(self) -> bytearray:
         """Makes the LEDs green."""
-        self.send_led_command(0, 255, 0)
+        return self.send_led_command(0, 255, 0)
 
-    def send_led_blue(self):
+    def send_led_blue(self) -> bytearray:
         """Makes the LEDs blue."""
-        self.send_led_command(0, 0, 255)
+        return self.send_led_command(0, 0, 255)
 
     def __checksum(self, byte_array: bytearray) -> int:
         """
