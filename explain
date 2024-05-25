@@ -1,0 +1,12 @@
+calc_bearing function: Calulates the `true bearing` for the rover
+
+- true bearing is the bearing from North
+
+bearing_to: This calculates the `relative bearing` between the rover and a coordinate
+
+- This would be the difference between the rover's tru bearing and the coords true bearing
+- relative bearing is the bearing between any two objects
+
+gps_controller we need calc_bearing
+
+navigation we need bearing_to
