@@ -58,7 +58,7 @@ class Communication:
         message: bytearray = bytearray(9)  # the wheels use 9 bytes
 
         # add subsystem and part bytes
-        message.extend(self.WHEEL_SUBSYSTEM_BYTE, self.WHEEL_PART_BYTE)
+        message.extend([self.WHEEL_SUBSYSTEM_BYTE, self.WHEEL_PART_BYTE])
 
         # stick in the speeds
         message.extend(
@@ -67,14 +67,13 @@ class Communication:
 
         # compute + add checksum
         checksum = self.__checksum(message)
-        message.extend(checksum)
+        message.extend([checksum])
 
         # send the message over udp 🥺
         # TODO: consider using Google's QUIC instead!
         self.socket.sendall(message)
-        logger.debug(f"Sending wheel speeds: {self.__prettyprint_byte_array(message)}")
+        logger.info(f"Sending wheel speeds: {self.__prettyprint_byte_array(message)}")
 
-    # Send LED Command
     def send_led_command(self, red: int, green: int, blue: int):
         """
         Sends the given LED color to the rover. All colors should be in the
@@ -83,8 +82,8 @@ class Communication:
         These are not checksummed.
         """
         message: bytearray = bytearray(5)  # LEDs use 5 bytes
-        message.extend(self.LED_SUBSYSTEM_BYTE, self.LED_PART_BYTE)
-        message.extend(red, green, blue)
+        message.extend([self.LED_SUBSYSTEM_BYTE, self.LED_PART_BYTE])
+        message.extend([red, green, blue])
         self.socket.sendall(message)
 
         pass
@@ -118,4 +117,4 @@ class Communication:
             if index != len(byte_array) - 1:
                 pretty_print += ", "
         pretty_print += "]"
-        print(pretty_print)
+        return pretty_print
