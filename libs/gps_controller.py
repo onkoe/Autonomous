@@ -74,7 +74,7 @@ class GpsController:
                 self.true_bearing = calculate_true_bearing(
                     self.previous_coordinates, self.coordinates
                 )
-                
+
                 # TODO: make report and send to navigation thread
 
             sleep(self.SLEEP_TIME)
@@ -117,4 +117,3 @@ class GpsReport:
     error: float = 0.0  # in millimeters, accounting for vert/horiz error
     true_bearing: float = 0.0  # in degrees
     previous_coordinates: Coordinate = Coordinate(0.0, 0.0)
-    
