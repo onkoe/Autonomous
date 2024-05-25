@@ -30,16 +30,10 @@ class Communication:
         side uses the same speed for all their wheels.
         """
 
-        def fix(speed: int) -> int:
-            # TODO: sanity check
-            fixed_speed = int((speed / 91.0) * 126)
+        (ls, rs) = (left_speed, right_speed)
+        if ls < 0 or ls > 255 or rs < 0 or rs > 255:
+            logger.error("HEY, speeds are wrong! `{ls}` and `{rs}` must be in [0, 255]")
 
-            if fixed_speed < 0 or fixed_speed > 255:
-                logger.error("HEY, fixed speed is wrong! `{speed}` must be in [0, 255]")
-
-            return fixed_speed
-
-        (ls, rs) = (fix(left_speed), fix(right_speed))
         self.send_wheel_speeds(ls, ls, ls, rs, rs, rs)
 
     def send_wheel_speeds(
