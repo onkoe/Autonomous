@@ -1,10 +1,13 @@
 from dataclasses import dataclass
+from typing import Union
 
 from geographiclib.geodesic import Geodesic
 from loguru import logger
 
+from libs import rover
 from libs.config import Config
 from libs.gps_controller import GpsController
+from gps_controller import calculate_true_bearing
 
 
 @dataclass()
@@ -70,25 +73,43 @@ class Navigation:
         """
         Finds the distance between the rover and `coord`.
         """
-        earth: Geodesic = Geodesic.WGS84
-        res = earth.Inverse(
-            self.rover_coords.latitude(),
-            self.rover_coords.longitude(),
-            coord.latitude(),
-            coord.longitude(),
-        )
-        distance: float = res["s12"]
+        if self.gps is None:
+            logger.error("GPS should be initialized before finding distance.")
+            return 0.0
+        else:
+            rover_coords = self.gps.coordinates
+            earth: Geodesic = Geodesic.WGS84
+            res = earth.Inverse(
+                rover_coords.get_latitude(),
+                rover_coords.get_longitude(),
+                coord.get_latitude(),
+                coord.get_longitude(),
+            )
+            distance: float = res["s12"]
 
-        logger.debug(
-            f"Distance between `{self.rover_coords}` and `{coord}`: `{distance}`m"
-        )
+        logger.debug(f"Distance between `{rover_coords}` and `{coord}`: `{distance}`m")
         return distance
 
     def angle_to_object(self, coord: Coordinate) -> float:
         """
         Finds the angle between the rover and `coord`.
         """
-        return calculate_angle(self.rover_coords, coord)
+
+        # Get all the cool stuff to calculate bearing from rover to coordinate
+        rover_coords = self.gps.coordinates
+        rover_true_bearing = self.gps.true_bearing
+        true_bearing_to_coordinate = calculate_true_bearing(rover_coords, coord)
+
+        # The relative bearing to an coordinate is the difference between
+        # the true bearing of the coordinate and the true bearing of the rover
+        relative_bearing = true_bearing_to_coordinate - rover_true_bearing
+
+        # Ensure relative bearing is > -180 and < 180
+        if relative_bearing < -180:  # Bearing is < 180 so add 360
+            return relative_bearing + 360
+        elif relative_bearing > 180:  # Bearing is > 180 so subtract 360
+            return relative_bearing - 360
+        return relative_bearing  # The bearing is just right :3
 
     def coordinates_to_object(self, distance_km: float, angle_deg: float) -> Coordinate:
         """
@@ -97,6 +118,8 @@ class Navigation:
         - `distance_km`: The object's distance from the Rover in kilometers.
         - `angle_deg`: The object's angle from the Rover in degrees.
         """
+        rover_coords = self.__get_gps_coordinates()
+
         earth: Geodesic = Geodesic.WGS84
         res = earth.Direct(
             distance_km,
@@ -109,10 +132,18 @@ class Navigation:
         logger.debug(f"Object coordinates (lat, lon): {c}")
         return c
 
+    def __get_gps_coordinates(self) -> Coordinate:
+        if self.gps is None:
+            logger.error("GPS was expected to be initialized, but it wasn't!")
+            return Coordinate(0.0, 0.0)
+        else:
+            return self.gps.coordinates
+
 
 def calculate_angle(self, co1: Coordinate, co2: Coordinate) -> float:
     """
     Calculates the angle between two coordinates.
+    The angle between the direction of the rover and North
 
     - `co1`: first coordinate.
     - `co2`: second coordinate.
