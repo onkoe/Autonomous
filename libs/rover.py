@@ -11,16 +11,17 @@ from libs.communication import Communication
 from libs.navigation import Coordinate, Navigation
 from maps import MapServer
 
+
 @dataclass
 class Mode:
     SEARCHING_ALONG_COORDINATE = 0
     ARUCO = 1
     YOLO = 2
-    
-    state: int
-    
 
-@dataclass(kw_only=True)
+    state: int
+
+
+@dataclass()
 class Rover:
     """
     A representation of the rover.
@@ -42,24 +43,22 @@ class Rover:
         self.nav = Navigation(
             config,
             given_coords,
-            swift_ip=self.conf.swift_ip(),
-            swift_port=self.conf.swift_port(),
+            swift_ip=self.conf.gps_ip(),
+            swift_port=self.conf.gps_port(),
         )
         self.gps.start_GPS()
 
         self.speeds = [0, 0]
         self.error_accumulation = 0.0
 
-        # TODO: Initiate different threads 
+        # TODO: Initiate different threads
         # ✅ Navigation thread
         # - Communication thread
         # - Aruco Tracker/YOLO thread
         # - RoverMap Thread
 
         self.opencv_camera_index = opencv_camera_index
-        self.rover_connection = Communication(
-            self.conf.swift_ip(), self.conf.swift_port()
-        )
+        self.rover_connection = Communication(self.conf.gps_ip(), self.conf.gps_port())
 
         pass
 
@@ -97,7 +96,7 @@ class Rover:
         pass
 
 
-@dataclass(kw_only=True)
+@dataclass()
 class Yolo:
     """
     Captures frames and checks for competition objects in a frame. Computes bounding boxes.
