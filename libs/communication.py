@@ -3,6 +3,8 @@ from socket import socket as Socket  # fixes namespace collisions
 
 from loguru import logger
 
+from libs.config import Config
+
 
 @dataclass()
 class Communication:
@@ -20,9 +22,9 @@ class Communication:
     LED_SUBSYSTEM_BYTE = 0x01
     LED_PART_BYTE = 0x02
 
-    def __init__(self, rover_ip: str, rover_port: int):
+    def __init__(self, c: Config):
         self.socket = Socket(Socket.AF_INET, Socket.SOCK_DGRAM)
-        self.socket.connect((rover_ip, rover_port))  # adds ip/port to socket's state
+        self.socket.connect((c.mbed_ip, c.mbed_port))  # adds ip/port to socket's state
 
     def send_simple_wheel_speeds(self, left_speed: int, right_speed: int):
         """
