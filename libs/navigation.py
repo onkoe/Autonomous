@@ -12,10 +12,10 @@ class Coordinate:
     latitude: float
     longitude: float
 
-    def latitude(self) -> float:
+    def get_latitude(self) -> float:
         self.latitude
 
-    def longitude(self) -> float:
+    def get_longitude(self) -> float:
         self.longitude
 
     def set_latitude(self, latitude: float):
@@ -28,7 +28,7 @@ class Coordinate:
         return f"({self.latitude}, {self.longitude})"
 
 
-@dataclass(kw_only=True)
+@dataclass()
 class Navigation:
     """
     Keeps track of latititude and longitude, distance to objective, and angle to objective.
