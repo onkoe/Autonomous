@@ -82,6 +82,10 @@ class Communication:
 
         pass
 
+    def send_lights_off(self):
+        """Turns off the lights."""
+        self.send_led_command(0, 0, 0)
+
     def send_led_red(self):
         """Makes the LEDs red."""
         self.send_led_command(255, 0, 0)
