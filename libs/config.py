@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+from loguru import logger
 
 from dataclasses import dataclass
 
@@ -10,6 +11,13 @@ class Config:
     """
 
     config: ConfigParser
+    
+    def __init__(self, config_path: str):
+        c = ConfigParser()
+        if not c.read(config_path):
+            logger.error("Failed to read the config from given config path: `{config_path}`")
+            
+        self.config = c
 
     ##### MBED, for controlling the LEDs #####
 
