@@ -31,10 +31,10 @@ class Coordinate:
 @dataclass()
 class Navigation:
     """
-    Keeps track of latititude and longitude, distance to objective, and angle to objective.
+    Keeps track of latititude and longitude of objective, distance to objective, and angle to objective.
 
     It also calculates some of these values.
-    
+
     The rover should run the `finish` method when it is done navigating.
 
     - `given_coords`: a given gps coordinate to navigate to. Depending on
@@ -43,7 +43,7 @@ class Navigation:
 
     config: Config
     given_coords: Coordinate
-    gps: GpsController | None = None
+    gps: Union[GpsController, None] = None
 
     def __init__(
         self, config: Config, given_coords: Coordinate, swift_ip: str, swift_port: int
@@ -59,12 +59,13 @@ class Navigation:
     def finish(self):
         """
         Stops the GPS thread and shuts down the GPS controller.
-        
+
         This should always be called when the rover finishes navigation.
         """
-        self.gps.stop()
-        self.gps = None
-    
+        if self.gps is not None:
+            self.gps.stop()
+            self.gps = None
+
     def distance_to_object(self, coord: Coordinate) -> float:
         """
         Finds the distance between the rover and `coord`.
@@ -100,8 +101,8 @@ class Navigation:
         res = earth.Direct(
             distance_km,
             angle_deg,
-            self.rover_coords.latitude(),
-            self.rover_coords.longitude(),
+            rover_coords.get_latitude(),
+            rover_coords.get_longitude(),
         )
         c = Coordinate(res["lat2"], res["lon2"])
 
@@ -118,7 +119,7 @@ def calculate_angle(self, co1: Coordinate, co2: Coordinate) -> float:
     """
     earth: Geodesic = Geodesic.WGS84
     res = earth.Inverse(
-        co1.latitude(), co1.longitude(), co2.latitude(), co2.longitude()
+        co1.get_latitude(), co1.get_longitude(), co2.get_latitude(), co2.get_longitude()
     )
     angle: float = res["azi1"]
 
