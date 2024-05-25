@@ -1,10 +1,11 @@
 from dataclasses import dataclass
+from typing import Tuple, Union
 
 import cv2
 from loguru import logger
 
 
-@dataclass(kw_only=True)
+@dataclass()
 class ArucoTracker:
     """
     Capture frames and detect ARUCO markers in frames
@@ -25,7 +26,7 @@ class ArucoTracker:
         """
         pass
 
-    def find_marker(self) -> None | tuple[float, float]:
+    def find_marker(self) -> Union[None, Tuple[float, float]]:
         """
         Captures a frame and checks to see if `aruco_marker` is present.
 
@@ -52,7 +53,7 @@ class ArucoTracker:
             )
 
             # check if our tag is in the list of found aruco tags
-            tag_index: int | None = None
+            tag_index: Union[int, None] = None
             for tag in aruco_tags:
                 if tag == self.aruco_marker:
                     logger.info(f"ArUco tag `{tag}` found!")
@@ -70,7 +71,7 @@ class ArucoTracker:
                 )
 
                 # calculations to get distance and angle to marker
-                distance_to_marker, angle_to_marker = 0.0
+                (distance_to_marker, angle_to_marker) = (0.0, 0.0)
 
                 # TODO
                 return (distance_to_marker, angle_to_marker)

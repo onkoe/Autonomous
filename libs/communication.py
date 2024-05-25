@@ -4,7 +4,7 @@ from socket import socket as Socket  # fixes namespace collisions
 from loguru import logger
 
 
-@dataclass(kw_only=True)
+@dataclass()
 class Communication:
     """
     Communicate wheel speeds and LED commands to proper micro-controllers
@@ -101,14 +101,14 @@ class Communication:
         """Makes the LEDs blue."""
         self.send_led_command(0, 0, 255)
 
-    def __checksum(self, byte_array: list[int]) -> int:
+    def __checksum(self, byte_array: bytearray) -> int:
         """
         Calculates the checksum of a byte array.
         """
         checksum: int = sum(byte_array) & 0xFF
         return checksum
 
-    def __prettyprint_byte_array(self, byte_array: list[int]):
+    def __prettyprint_byte_array(self, byte_array: bytearray) -> str:
         """
         Prints a byte array in a human-readable format.
         """

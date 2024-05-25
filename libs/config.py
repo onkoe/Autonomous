@@ -2,7 +2,8 @@ from configparser import ConfigParser
 
 from dataclasses import dataclass
 
-@dataclass(kw_only=True)
+
+@dataclass()
 class Config:
     """
     A container for the rover's configuration.

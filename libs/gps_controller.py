@@ -9,7 +9,7 @@ from libs import config, navigation
 from libs.navigation import Coordinate
 
 
-@dataclass(kw_only=True)
+@dataclass()
 class GpsController:
     """
     Controls the GPS library.
@@ -81,6 +81,7 @@ class GpsController:
         logger.info("GPS thread: no longer enabled, shutting down...")
 
 @dataclass(kw_only=True)
+@dataclass()
 class GpsReport:
     """
     A container for GPS data. Sendable across threads.
