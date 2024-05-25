@@ -8,6 +8,8 @@ from loguru import logger
 from pathlib import Path
 from configparser import ConfigParser
 
+# TODO(rewrite): make sure the speeds are correct. account for wheel deadlock!
+
 
 def flash(mbedIP: str, mbedPort: int) -> None:
     """
@@ -15,13 +17,12 @@ def flash(mbedIP: str, mbedPort: int) -> None:
 
     This is used to show that the rover successfully navigated to a goal.
     """
-    
+
     while True:
         udp_out.send_LED(mbedIP, mbedPort, "g")
         sleep(0.2)
         udp_out.send_LED(mbedIP, mbedPort, "o")
         sleep(0.2)
-
 
 
 # Create Argument Parser and parse arguments
@@ -50,7 +51,7 @@ args = arg_parser.parse_args()
 
 # TODO: dataclass this function. returning a tuple is ugly and begging for bugs
 # TODO: use typing. broken due to old ass python (<3.8)
-#def parse_arguments() -> Tuple[list[int], list[Tuple[float, float]]]:
+# def parse_arguments() -> Tuple[list[int], list[Tuple[float, float]]]:
 def parse_arguments():
     """
     Parses the command line arguments.
@@ -103,8 +104,10 @@ def parse_arguments():
 # TODO: make this a part of a `Rover` class :3
 def drive(
     # TODO: use typing. old ass python (<3.8)
-    #rover: Drive, gps_coordinates: list[Tuple[float, float]], aruco_ids: list[int]
-    rover: Drive, gps_coordinates, aruco_ids
+    # rover: Drive, gps_coordinates: list[Tuple[float, float]], aruco_ids: list[int]
+    rover: Drive,
+    gps_coordinates,
+    aruco_ids,
 ) -> bool:
     """
     Given a Drive object, navigate to goal
@@ -114,9 +117,10 @@ def drive(
 
     # Drive along GPS coordinates
     logger.warning("ok we're driving along the gps coords :3")
-    dac_result = rover.drive_along_coordinates(gps_coordinates, aruco_ids[0], aruco_ids[1])
+    dac_result = rover.drive_along_coordinates(
+        gps_coordinates, aruco_ids[0], aruco_ids[1]
+    )
     logger.error(f"drive along coordinates returned {dac_result}")
-    
 
     # TODO: Can we have this run in the rover class instead of returning from 'drive_along_coordinates'
     if aruco_ids[0] != -1:
