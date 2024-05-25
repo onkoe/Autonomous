@@ -46,7 +46,7 @@ class Navigation:
     gps: GpsController | None = None
 
     def __init__(
-        self, config: Config, given_coords: Coordinate, swift_ip: int, swift_port: int
+        self, config: Config, given_coords: Coordinate, swift_ip: str, swift_port: int
     ):
         """
         Initializes the navigation to get coordinates.
