@@ -59,6 +59,9 @@ class GpsController:
         """
         self.enabled = False
         gps.gps_finish()
+        logger.info("Joining the GPS Controller process...")
+        self.process.close()
+        logger.info("GPS Controller process joined!")
 
     def check(self):
         while self.enabled:
