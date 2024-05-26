@@ -16,7 +16,7 @@ class ArucoTracker:
     # TODO: Find out how to get camera matrix and distance coefficients
     camera_mtx: type  # TODO
     distance_coefficients: type  # TODO
-    aruco_dictionary: cv2.aruco.Dictionary
+    aruco_dictionary: cv2.aruco.DICT_4X4_50
     video_capture: cv2.VideoCapture
 
     def __init__(self, opencv_camera_index: int):
