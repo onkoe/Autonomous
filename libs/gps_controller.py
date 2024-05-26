@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from threading import Thread
+from multiprocessing import Process
 from time import sleep
 
 from loguru import logger
@@ -26,6 +26,9 @@ class GpsController:
     error: float = 0.0  # in millimeters, accounting for vert/horiz error
     true_bearing: float = 0.0  # Bearing from True North
     previous_coordinates: Coordinate = Coordinate(0.0, 0.0)
+    
+    # here's the process we can join on when the gps is closed
+    process: Process
 
     SLEEP_TIME: float = 0.1
 
@@ -37,15 +40,17 @@ class GpsController:
 
     def start(self):
         """
-        Starts the GPS thread and connects to the GPS hardware itself.
+        Starts the GPS process and connects to the GPS hardware itself.
         """
         gps.gps_init(self.conf.gps_ip(), self.conf.gps_port())
         self.enabled = True
 
-        logger.info("Starting GPS thread...")
-        t = Thread(target=self.check, name=("GPS thread"), args=())
-        t.start()
-        logger.info("GPS thread started!")
+        logger.info("Starting GPS process...")
+        proc = Process(target=self.check, name="GPS Process")
+        proc.start()
+        logger.info("GPS process started!")
+        
+        self.process = proc
         pass
 
     def stop(self):
