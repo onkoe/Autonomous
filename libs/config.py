@@ -15,7 +15,7 @@ class Config:
     def __init__(self, config_path: str):
         c = ConfigParser()
         if not c.read(config_path):
-            logger.error("Failed to read the config from given config path: `{config_path}`")
+            logger.error(f"Failed to read the config from given config path: `{config_path}`")
             
         self.config = c
 
