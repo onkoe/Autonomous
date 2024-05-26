@@ -1,10 +1,9 @@
 from dataclasses import dataclass
-from typing import Union
+from multiprocessing import Queue
 
 from geographiclib.geodesic import Geodesic
 from loguru import logger
 
-from libs import rover
 from libs.config import Config
 from libs.coordinate import Coordinate
 from libs.gps_controller import GpsController, calculate_true_bearing, GpsReport
@@ -23,19 +22,21 @@ class Navigation:
         section of comp, ARUCO tags will be nearby
     """
 
-    config: Config
+    conf: Config
     given_coords: Coordinate
-    gps: Union[GpsController, None] = None
+    gps: GpsController
+    
+    queue: Queue
 
     def __init__(
-        self, config: Config, given_coords: Coordinate, swift_ip: str, swift_port: int
+        self, conf: Config, given_coords: Coordinate
     ):
         """
         Initializes the navigation to get coordinates.
         """
         self.given_coords = given_coords
-        self.config = config
-        self.gps = GpsController(swift_ip, swift_port)
+        self.conf = conf
+        self.gps = GpsController(self.conf)
         self.gps.start()
 
     def finish(self):
@@ -44,9 +45,8 @@ class Navigation:
 
         This should always be called when the rover finishes navigation.
         """
-        if self.gps is not None:
-            self.gps.stop()
-            self.gps = None
+        self.gps.stop()
+        self.gps = None
 
     def distance_to_object(self, coord: Coordinate) -> float:
         """
@@ -97,7 +97,7 @@ class Navigation:
         - `distance_km`: The object's distance from the Rover in kilometers.
         - `angle_deg`: The object's angle from the Rover in degrees.
         """
-        rover_coords = self.__get_gps_coordinates()
+        rover_coords = self.gps.coordinates
 
         earth: Geodesic = Geodesic.WGS84
         res = earth.Direct(
@@ -110,13 +110,30 @@ class Navigation:
 
         logger.debug(f"Object coordinates (lat, lon): {c}")
         return c
+    
+    def navigate(self):
+        """
+        A method that runs until `not self.enabled`. Checks for a new 
+        GpsReport. 
+        
+        If one is present, does logic based on the rover's mode and location.
+        """
+        while self.enabled:
+            # check for new gps report
+            if not self.queue.empty():
+                message = self.queue.get()
+                
+                if type(message) is GpsReport:
+                    logger.debug("Found new GPS report! Let's operate on it...")
+                    self.drive(message)
+                    
+                    
+    def drive(self, message: GpsReport):
+        # UNIMPLEMENTED!
+        pass
 
-    def __get_gps_coordinates(self) -> Coordinate:
-        if self.gps is None:
-            logger.error("GPS was expected to be initialized, but it wasn't!")
-            return Coordinate(0.0, 0.0)
-        else:
-            return self.gps.coordinates
+            
+            
 
 
 def calculate_angle(self, co1: Coordinate, co2: Coordinate) -> float:
