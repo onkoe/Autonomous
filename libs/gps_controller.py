@@ -7,7 +7,7 @@ from geographiclib.geodesic import Geodesic
 
 from gps import gps
 from libs import config
-from libs.navigation import Coordinate
+from libs.coordinate import Coordinate
 
 
 @dataclass()

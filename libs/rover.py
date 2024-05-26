@@ -8,8 +8,8 @@ import cv2
 
 from libs import config
 from libs.communication import Communication
-from libs.navigation import Coordinate, Navigation
-from maps import MapServer
+from libs.navigation import Navigation
+from maps.server import MapServer
 
 
 @dataclass

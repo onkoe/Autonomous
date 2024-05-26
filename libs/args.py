@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Union, List
 from loguru import logger
 
-from libs.navigation import Coordinate
+from libs.coordinate import Coordinate
 
 
 @dataclass
