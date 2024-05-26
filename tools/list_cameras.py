@@ -1,5 +1,3 @@
-from typing import List
-
 from cv2 import VideoCapture
 from loguru import logger
 
