@@ -32,7 +32,10 @@ class GpsController:
 
     SLEEP_TIME: float = 0.1
 
-    def __init__(self, swift_ip: str, swift_port: int):
+    def __init__(self, c: config.Config):
+        self.conf = c
+        
+        # TODO?
         """
         Initialize Location object to get coordinates
         """
