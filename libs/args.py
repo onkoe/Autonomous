@@ -51,13 +51,12 @@ class Args:
         args: Namespace = arg_parser.parse_args()
 
         self.aruco_id = args.aruco_id
-        if type(self.aruco_id) is not None and (
-            self.aruco_id > 50 or self.aruco_id < 0
-        ):
-            logger.error(
-                f"You must pass an ArUco ID within the range: [0, 50]. You gave: `{self.aruco_id}`."
-            )
-            exit(1)
+        if self.aruco_id is not None:
+            if self.aruco_id > 50 or self.aruco_id < 0:
+                logger.error(
+                    f"You must pass an ArUco ID within the range: [0, 50]. You gave: `{self.aruco_id}`."
+                )
+                exit(1)
 
         self.camera_id = args.camera_id if args.camera_id else 0
 
