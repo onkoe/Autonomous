@@ -31,11 +31,34 @@ class Rover:
     mode: Mode
     
     rover_connection: Communication
-    opencv_camera_index: int
+    communication_queue: Queue
+    communication_process: Process
+    
     nav: Navigation
-    mode: Mode
+    navigation_queue: Queue
+    
+    aruco_tracker: ArucoTracker
+    aruco_tracker_queue: Queue
 
-    def __init__(self, given_coords: Coordinate, opencv_camera_index: int):
+    def __init__(self):
+        # get arguments
+        logger.info("Parsing arguments...")
+        self.arguments = Args()
+        
+        self.mode = Mode.SEARCHING_ALONG_COORDINATE
+        
+        # check arguments for aruco id. set self.mode accordingly
+        if self.arguments.aruco_id is None:
+            logger.info("No ArUco markers were given. Let's navigate to the given coordinates.")
+            self.mode = self.mode
+            # go to coordinate
+            
+        else:
+            self.mode = Mode.SEARCHING_ALONG_COORDINATE
+            # go to coordinate
+            # TODO: when that's done, look for the marker
+        logger.info("Parsed arguments successfully!")
+        
         # sets up the parser
         self.conf = Config("../config.ini")
         
@@ -49,21 +72,28 @@ class Rover:
         # - Aruco Tracker/YOLO thread
         # - RoverMap Thread
 
-        self.opencv_camera_index = opencv_camera_index
         self.rover_connection = Communication(self.conf.gps_ip(), self.conf.gps_port())
 
         pass
 
-    def start_navigation_thread(self):
-        # What does navigati
+    def start_navigation(self):
+        # initialize the gps object
+        # this starts a thread for the gps, as this module handles that itself
+        self.nav = Navigation(
+            self.conf,
+            self.arguments.coordinate_list, # FIXME: needs to take a list??? or manage it manual
+        )
+        
         pass
 
-    def start_communication_thread(self):
+    def start_communication(self):
         # starts the thread that sends wheel speeds
-        self.running = True
-        t = Thread(target=self.send_speed, name=("send wheel speeds"), args=())
-        t.daemon = True
-        t.start()
+        proc = Process(target=self.rover_connection.handle_commands, name="send wheel speeds") # FIXME
+        proc.daemon = True # FIXME: don't do this
+        proc.start()
+        
+        logger.info("Started the communication thread!")
+        self.communication_process = proc
         pass
 
     def start_aruco_tracker_thread(self):
