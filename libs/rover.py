@@ -26,8 +26,10 @@ class Rover:
     """
     A representation of the rover.
     """
-
-    conf: config.Config
+    arguments: Args
+    conf: Config
+    mode: Mode
+    
     rover_connection: Communication
     opencv_camera_index: int
     nav: Navigation
@@ -35,18 +37,8 @@ class Rover:
 
     def __init__(self, given_coords: Coordinate, opencv_camera_index: int):
         # sets up the parser
-        config = configparser.ConfigParser(allow_no_value=True)
-        config.read(os.path.dirname(__file__) + "/../config.ini")
-
-        # initialize the gps object
-        # this starts a thread for the gps
-        self.nav = Navigation(
-            config,
-            given_coords,
-            swift_ip=self.conf.gps_ip(),
-            swift_port=self.conf.gps_port(),
-        )
-        self.gps.start_GPS()
+        self.conf = Config("../config.ini")
+        
 
         self.speeds = [0, 0]
         self.error_accumulation = 0.0
